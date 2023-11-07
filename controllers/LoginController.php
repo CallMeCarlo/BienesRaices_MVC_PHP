@@ -1,0 +1,59 @@
+<?php
+
+namespace Controllers;
+use MVC\Router;
+use Model\Admin;
+
+class LoginController {
+    public static function login(Router $router) {
+
+        //Arreglo con mensajes de error
+        $errores = [];
+
+        if($_SERVER["REQUEST_METHOD"] === "POST") {
+
+            $auth = new Admin($_POST);
+
+                //Validar errores
+            $errores = $auth->validar();
+
+            if(empty($errores)) {
+                //Verificar si el usuario existe
+                $resultado = $auth->comprobarUsuario();
+
+                if(!$resultado) {
+                    $errores = Admin::getErrores();
+                } else {
+                //Verificar si el password existe
+                $autenticado = $auth->comprobarPassword($resultado);
+
+                if($autenticado) {
+                    //Autenticar al usuario
+                    $auth->autenticar();
+
+                } else {
+                    //Password incorrecto
+                    $errores = Admin::getErrores();
+                }
+                }
+
+            }
+
+
+        }
+
+        $router->render("/auth/login", [
+            "errores" => $errores
+        ]);
+
+    }
+
+    public static function logout() {
+        session_start();
+
+        $_SESSION = [];
+
+        header("Location: /");
+    }
+
+}
